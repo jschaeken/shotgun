@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shotgun/presentation/screens/login_screen.dart';
 import 'package:shotgun/presentation/screens/role_screen.dart';
 
 void main() {
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         actionIconTheme: null,
         useMaterial3: true,
       ),
-      home: const RoleScreen(),
+      home: const LoginScreen(),
     );
   }
 }
