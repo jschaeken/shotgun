@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shotgun/domain/models/utils/constants.dart';
 import 'package:shotgun/presentation/screens/seat_book_screen.dart';
 
 class RoleScreen extends StatefulWidget {
@@ -17,50 +18,61 @@ class _RoleScreenState extends State<RoleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final time = DateTime.now();
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // App Title
-          Text(
-            'S H O T G U N',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-
-          // Logo or Loading
-          tripIsLoading
-              ? const SizedBox(
-                  height: 100,
-                  width: 100,
-                  child: CircularProgressIndicator(),
-                ).animate().fadeIn()
-              : const CircleAvatar(
-                  minRadius: 100,
-                  backgroundImage: AssetImage('assets/images/me.jpg'),
-                ).animate().fadeIn(),
-
-          Center(
-            child: Column(
-              children: [
-                // Create a trip
-                ElevatedButton(
-                    onPressed: () {}, child: const Text('Create a trip')),
-                const SizedBox(
-                  height: 30,
-                ),
-                // Join a trip
-                ElevatedButton(
-                    onPressed: () async {
-                      String? code = await joinTripDialog();
-                      if (code != null) {
-                        joinTrip(code);
-                      }
-                    },
-                    child: const Text('Join a trip'))
-              ],
+      body: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // App Title
+            Padding(
+              padding: Constants.padding,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Good ${time.hour < 12 ? 'Morning' : time.hour < 18 ? 'Afternoon' : 'Evening'},\nJacques!',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  tripIsLoading
+                      ? const SizedBox(
+                          height: 50,
+                          width: 50,
+                          child: CircularProgressIndicator(),
+                        ).animate().fadeIn()
+                      : const CircleAvatar(
+                          minRadius: 50,
+                          backgroundImage: AssetImage('assets/images/me.jpg'),
+                        ).animate().fadeIn(),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Logo or Loading
+
+            Center(
+              child: Column(
+                children: [
+                  // Create a trip
+                  ElevatedButton(
+                      onPressed: () {}, child: const Text('Create a trip')),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  // Join a trip
+                  ElevatedButton(
+                      onPressed: () async {
+                        String? code = await joinTripDialog();
+                        if (code != null) {
+                          joinTrip(code);
+                        }
+                      },
+                      child: const Text('Join a trip'))
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

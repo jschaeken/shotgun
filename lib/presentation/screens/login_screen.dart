@@ -1,5 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shotgun/presentation/screens/role_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shotgun/domain/models/utils/constants.dart';
+import 'package:shotgun/presentation/components/general_widgets.dart';
+import 'package:shotgun/presentation/state_managment/bloc/auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,59 +13,93 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _obscureText = true;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          // logim tittle
+      appBar: AppBar(
+        title: const Text(''),
+        // leading: IconButton(
+        //   onPressed: () {
+        //     _pushInitialScreen(context);
+        //   },
+        //   icon: const Icon(CupertinoIcons.back),
+        // ),
+        automaticallyImplyLeading: true,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Padding(
+        padding: Constants.padding,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Login with email and password text
+            const SizedBox(
+              width: double.infinity,
+              child: Text(
+                "L O G I N",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
 
-          Flexible(
-            flex: 1,
-            child: Container(
-              color: Colors.red,
-              child: const Center(
-                child: Text(
-                  "Please login to continue",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: Color.fromARGB(255, 28, 92, 144),
-                    fontWeight: FontWeight.w600,
+            Column(
+              children: [
+                // Email input
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Email",
                   ),
                 ),
-              ),
-            ),
-          ),
-          // const Spacer(
-          //   flex: 3,
-          // ),
 
-          // login button
-          Flexible(
-            flex: 2,
-            child: Container(
-              color: Colors.purple,
-              child: Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RoleScreen()),
-                    );
-                  },
-                  child: const Text("Login"),
+                // Password input
+                TextField(
+                  obscureText: _obscureText,
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureText
+                            ? CupertinoIcons.eye
+                            : CupertinoIcons.eye_slash,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
 
-          // sign up button
-        ],
+            // Login button
+            Button('Login', onPressed: _login)
+          ],
+        ),
       ),
     );
+  }
+
+  void _login() {
+    context.read<AuthBloc>().add(
+          LoginStarted(
+            _emailController.text,
+            _passwordController.text,
+          ),
+        );
+  }
+
+  void _pushInitialScreen(BuildContext context) {
+    Navigator.pushReplacementNamed(context, '/initial');
   }
 }
