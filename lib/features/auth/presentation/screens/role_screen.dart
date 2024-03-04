@@ -1,12 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shotgun/features/auth/domain/entities/auth/user.dart';
 import 'package:shotgun/features/core/domain/entities/utils/constants.dart';
 import 'package:shotgun/features/passenger_booking/presentation/screens/seat_book_screen.dart';
-import 'package:shotgun/features/passenger_booking/presentation/screens/seat_book_screen_v2.dart';
 
 class RoleScreen extends StatefulWidget {
   final User user;
