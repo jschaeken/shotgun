@@ -13,16 +13,18 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   late final AuthProvider authProvider;
+  late final listener;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.addListener(() {
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.addListener(() {
+      if (mounted) {
         _onErrorMessage(authProvider.errorMessage);
-      });
+        _onLoading(authProvider.isLoading);
+      }
     });
   }
 
@@ -31,6 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String? email;
   String? password;
   int _currentPage = 0;
+
+  bool isLoading = false;
 
   List<PageParams> pages = [
     PageParams(
@@ -63,26 +67,34 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: PageView(
-            controller: _pageController,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
+          child: Stack(
             children: [
-              ...pages.map((page) {
-                return Page(
-                  question: page.question,
-                  nextButtonText: page.nextButtonText,
-                  previousButtonText: page.previousButtonText,
-                  errorEmpty: page.errorEmpty,
-                  obscureText: page.obscureText,
-                  onNext: (value) {
-                    _onNext(value);
-                  },
-                );
-              }),
+              PageView(
+                controller: _pageController,
+                onPageChanged: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                children: [
+                  ...pages.map((page) {
+                    return Page(
+                      question: page.question,
+                      nextButtonText: page.nextButtonText,
+                      previousButtonText: page.previousButtonText,
+                      errorEmpty: page.errorEmpty,
+                      obscureText: page.obscureText,
+                      onNext: (value) {
+                        _onNext(value);
+                      },
+                    );
+                  }),
+                ],
+              ),
+              if (isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
             ],
           )),
     );
@@ -123,6 +135,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     }
+  }
+
+  void _onLoading(bool value) {
+    setState(() {
+      isLoading = value;
+    });
   }
 }
 

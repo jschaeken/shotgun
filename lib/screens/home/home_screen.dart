@@ -50,7 +50,9 @@ class HomeScreen extends StatelessWidget {
                     final driver = snapshot.data as Driver;
                     return Text('Driver: ${driver.name}');
                   }),
-              trailing: Text('${ride.availableSeats} seats taken'),
+              trailing: Text(
+                  '${ride.seatsTaken}/${ride.availableSeats} seats taken',
+                  style: Theme.of(context).textTheme.titleMedium),
               onTap: () {
                 Navigator.pushNamed(context, '/rideDetails',
                     arguments: ride.id);
