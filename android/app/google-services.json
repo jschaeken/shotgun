@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "463355094518",
+    "project_id": "shotgun-b7e90",
+    "storage_bucket": "shotgun-b7e90.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463355094518:android:95c6ec1d8541b3296f53d7",
+        "android_client_info": {
+          "package_name": "com.essence.shotgun"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCI-dBNUtuea6r0IbDMMrTnyFVbkY-sn28"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

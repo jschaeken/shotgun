@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyB1MOJn0fUty-3YYqFypNha9_fyMW8f5gE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>463355094518</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.essence.shotgun</string>
+	<key>PROJECT_ID</key>
+	<string>shotgun-b7e90</string>
+	<key>STORAGE_BUCKET</key>
+	<string>shotgun-b7e90.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:463355094518:ios:81d0ca587dc720126f53d7</string>
+</dict>
+</plist>
