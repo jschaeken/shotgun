@@ -47,4 +47,22 @@ class AuthProvider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  void signUp(String s, String t, String u) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      await _auth.createUserWithEmailAndPassword(email: s, password: t);
+      _isLoading = false;
+      notifyListeners();
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = e.message;
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

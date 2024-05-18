@@ -13,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   late final AuthProvider authProvider;
+  bool iHaveAccount = false;
   late final listener;
 
   @override
@@ -64,6 +65,47 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text('Shotgun',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: false,
+        actions: [
+          Row(
+            children: [
+              iHaveAccount
+                  ? TextButton(
+                      onPressed: () {
+                        setState(() {
+                          iHaveAccount = false;
+                        });
+                      },
+                      child: const Text('I have an account'),
+                    )
+                  : TextButton(
+                      onPressed: () {
+                        setState(() {
+                          iHaveAccount = true;
+                        });
+                      },
+                      child: const Text('Registering'),
+                    ),
+              Switch.adaptive(
+                  value: iHaveAccount,
+                  onChanged: (value) {
+                    setState(() {
+                      iHaveAccount = value;
+                      if (_currentPage == 0 && iHaveAccount) {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                        );
+                      } else if (_currentPage == 1 && !iHaveAccount) {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                        );
+                      }
+                    });
+                  }),
+            ],
+          )
+        ],
       ),
       body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -128,7 +170,11 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         password = value;
       });
-      authProvider.signIn(email!, password!);
+      if (!iHaveAccount) {
+        authProvider.signUp(email!, password!, name!);
+      } else {
+        authProvider.signIn(email!, password!);
+      }
     }
   }
 
