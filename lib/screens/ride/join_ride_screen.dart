@@ -11,6 +11,11 @@ class JoinRideScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rideProvider = Provider.of<RideProvider>(context);
+    rideProvider.addListener(() {
+      if (rideProvider.errorMessage != null) {
+        _showErrorSnackbar(context, rideProvider.errorMessage!);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -43,22 +48,11 @@ class JoinRideScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  final res = await rideProvider.joinRide(
+                  await rideProvider.joinRide(
                     '7S02Z8iUYhNNgoJpXdRq',
                     'currentUserId',
                     1,
                   );
-                  log(res.toString());
-                  // if (res != null) {
-                  //   // Show snackbar with error message
-                  //   if (context.mounted) {
-                  //     ScaffoldMessenger.of(context).showSnackBar(
-                  //       SnackBar(
-                  //         content: Text(res),
-                  //       ),
-                  //     );
-                  //   }
-                  // }
                 } catch (e) {
                   log(e.toString());
                 }
@@ -74,6 +68,15 @@ class JoinRideScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
       ),
     );
   }

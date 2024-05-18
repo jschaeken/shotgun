@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
 import 'package:shotgun_v2/utils/dateTime.dart';
 
@@ -13,14 +14,22 @@ class CreateRideScreen extends StatefulWidget {
 
 class _CreateRideScreenState extends State<CreateRideScreen> {
   final _formKey = GlobalKey<FormState>();
+  late RideProvider rideProvider;
+  late AuthProvider authProvider;
   String _destination = '';
   DateTime? _dateTime;
   int _seatCounter = 4;
 
   @override
-  Widget build(BuildContext context) {
-    final rideProvider = Provider.of<RideProvider>(context);
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    rideProvider = Provider.of<RideProvider>(context, listen: false);
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Ride'),
@@ -104,11 +113,19 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
               const SizedBox(height: 20.0),
               ElevatedButton(
                 onPressed: () {
+                  final uid = authProvider.user?.uid;
+                  if (uid == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please login to create a ride'),
+                      ),
+                    );
+                    return;
+                  }
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     Ride newRide = Ride.upload(
-                      driverId:
-                          'currentDriverId', // Replace with actual driver ID
+                      driverId: uid,
                       destination: _destination,
                       dateTime: _dateTime ?? DateTime.now(),
                       availableSeats: _seatCounter,
@@ -117,6 +134,12 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
                     rideProvider.createRide(newRide).then((_) {
                       Navigator.pop(context);
                     });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please fill in all fields'),
+                      ),
+                    );
                   }
                 },
                 child: const Text('Create Ride'),

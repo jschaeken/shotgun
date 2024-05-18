@@ -28,9 +28,11 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     } on FirebaseAuthException catch (e) {
       _errorMessage = e.message;
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
+      _isLoading = false;
       notifyListeners();
     }
   }
@@ -42,6 +44,7 @@ class AuthProvider with ChangeNotifier {
   void _onAuthStateChanged(User? user) {
     _user = user;
     _errorMessage = null;
+    _isLoading = false;
     notifyListeners();
   }
 }

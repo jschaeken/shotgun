@@ -10,9 +10,12 @@ class RideProvider with ChangeNotifier {
 
   List<Ride> _rides = [];
   Ride? _currentRide;
+  String? _errorMessage;
 
   List<Ride> get rides => _rides;
   Ride? get currentRide => _currentRide;
+
+  String? get errorMessage => _errorMessage;
 
   RideProvider() {
     // Fetch rides on initialization
@@ -24,11 +27,13 @@ class RideProvider with ChangeNotifier {
     try {
       QuerySnapshot snapshot = await _firestore.collection('rides').get();
       _rides = snapshot.docs.map((doc) => Ride.fromFirestore(doc)).toList();
+      _errorMessage = null;
       notifyListeners();
     } catch (e, s) {
       if (kDebugMode) {
         print(e.toString());
         print(s.toString());
+        _errorMessage = e.toString();
       }
     }
   }
@@ -40,15 +45,17 @@ class RideProvider with ChangeNotifier {
           await _firestore.collection('rides').add(ride.toMap());
       ride.id = docRef.id;
       _rides.add(ride);
+      _currentRide = ride;
+      _errorMessage = null;
       notifyListeners();
     } catch (e) {
       print(e.toString());
-      // Handle error
+      _errorMessage = e.toString();
     }
   }
 
   // Join an existing ride
-  Future<String?> joinRide(String rideId, String userId, int seatNumber) async {
+  Future<void> joinRide(String rideId, String userId, int seatNumber) async {
     try {
       DocumentReference rideRef = _firestore.collection('rides').doc(rideId);
       DocumentSnapshot rideSnapshot = await rideRef.get();
@@ -61,37 +68,86 @@ class RideProvider with ChangeNotifier {
         }, SetOptions(merge: true));
         Ride ride = Ride.fromFirestore(rideSnapshot);
         _currentRide = ride;
-        notifyListeners();
+        _errorMessage = null;
       } else {
-        return 'Ride not found';
+        _errorMessage = 'Ride not found';
       }
     } catch (e, s) {
       debugPrint(e.toString());
       debugPrintStack(stackTrace: s);
-      return 'Error joining ride';
+      _errorMessage = e.toString();
     }
-    return null;
+    notifyListeners();
   }
 
   // Fetch ride details by ID
-  Future<void> fetchRideDetails(String rideId) async {
+  // Stream ride details by ID
+  void streamRideDetails(String rideId) {
     try {
       DocumentReference rideRef = _firestore.collection('rides').doc(rideId);
-      DocumentSnapshot rideSnapshot = await rideRef.get();
-
-      if (rideSnapshot.exists) {
-        _currentRide =
-            Ride.fromFirestore(rideSnapshot, getPassengerDetails: true);
-        log('currentRide.passengerMaps.length: ${_currentRide!.passengerMaps.length}');
-        notifyListeners();
-      } else {
-        // Handle ride not found
-      }
+      rideRef.snapshots().listen((rideSnapshot) {
+        if (rideSnapshot.exists) {
+          _currentRide =
+              Ride.fromFirestore(rideSnapshot, getPassengerDetails: true);
+          log('currentRide.passengerMaps.length: ${_currentRide!.passengerMaps.length}');
+          _errorMessage = null;
+        } else {
+          _errorMessage = 'Ride not found';
+        }
+      });
     } catch (e, s) {
       debugPrint(e.toString());
       debugPrintStack(stackTrace: s);
-      // Handle error
+      _errorMessage = e.toString();
     }
+    notifyListeners();
+  }
+
+  void deleteRide(String? id) {
+    try {
+      _firestore.collection('rides').doc(id).delete();
+      _rides.removeWhere((ride) => ride.id == id);
+      _currentRide = null;
+    } catch (e) {
+      _errorMessage = e.toString();
+    }
+    notifyListeners();
+  }
+
+  void addPassenger(String email) async {
+    try {
+      if (_currentRide == null) return;
+      // Get userId by email
+      QuerySnapshot userSnapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+      if (userSnapshot.docs.isEmpty) {
+        _errorMessage = 'User not found';
+        notifyListeners();
+        return;
+      }
+      String userId = userSnapshot.docs.first.id;
+
+      DocumentReference rideRef =
+          _firestore.collection('rides').doc(_currentRide!.id);
+      DocumentSnapshot rideSnapshot = await rideRef.get();
+      if (rideSnapshot.exists) {
+        await rideRef.update({
+          'passengers': FieldValue.arrayUnion([
+            {userId, _currentRide!.seatsTaken + 1}
+          ])
+        });
+        Ride ride = Ride.fromFirestore(rideSnapshot);
+        _currentRide = ride;
+        _errorMessage = null;
+      } else {
+        _errorMessage = 'Ride not found';
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    }
+    notifyListeners();
   }
 }
 
@@ -104,7 +160,7 @@ class Ride {
   String destination;
   DateTime dateTime;
   List<Map<String, dynamic>> passengerMaps;
-  List<Future<Passenger>> passengers;
+  List<Future<Passenger?>> passengers;
   int seatsTaken = 0;
 
   Ride({
@@ -129,6 +185,15 @@ class Ride {
     this.passengers = const [],
   }) : driver = Future.value(null);
 
+  Ride.empty()
+      : driverId = '',
+        availableSeats = 5,
+        driver = Future.value(null),
+        destination = '',
+        dateTime = DateTime.now(),
+        passengerMaps = [],
+        passengers = [];
+
   // Convert Ride object to Firestore map
   Map<String, dynamic> toMap() {
     return {
@@ -146,12 +211,17 @@ class Ride {
     Map data = doc.data() as Map<String, dynamic>;
     final passengerMaps =
         List<Map<String, dynamic>>.from(data['passengers'] ?? []);
-    final passengers = <Future<Passenger>>[];
+    final passengers = <Future<Passenger?>>[];
     if (getPassengerDetails) {
-      passengers.addAll(passengerMaps
-          .map((map) => Passenger.fromRide(
-              userId: map['userId'], seatNumber: map['seatNumber']))
-          .toList());
+      for (var passengerMap in passengerMaps) {
+        if (passengerMap.isEmpty) continue;
+        if (passengerMap['userId'] == null) continue;
+        if (passengerMap['seatNumber'] == null) continue;
+        final passenger = Passenger.fromRide(
+            userId: passengerMap['userId'],
+            seatNumber: passengerMap['seatNumber']);
+        passengers.add(passenger);
+      }
     }
     final driver =
         Driver.fromUserId(userId: data['driverId'], availableSeats: 0);

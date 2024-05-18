@@ -87,6 +87,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       onNext: (value) {
                         _onNext(value);
                       },
+                      onBack: (value) {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                        );
+                      },
                     );
                   }),
                 ],
@@ -128,6 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onErrorMessage(String? value) {
     if (value != null && value.isNotEmpty && mounted) {
+      isLoading = false;
+      setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
@@ -148,6 +156,7 @@ class Page extends StatelessWidget {
   final Function(String value) onNext;
   final String question;
   final String? previousButtonText;
+  final Function(String value)? onBack;
   final String nextButtonText;
   final String errorEmpty;
   final bool obscureText;
@@ -157,6 +166,7 @@ class Page extends StatelessWidget {
     required this.question,
     required this.onNext,
     this.previousButtonText,
+    this.onBack,
     required this.nextButtonText,
     this.obscureText = false,
     this.errorEmpty = 'Please enter a value',
@@ -167,6 +177,7 @@ class Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    assert(onBack != null || previousButtonText == null);
     focusNode.requestFocus();
     return Column(
       children: [
@@ -194,7 +205,7 @@ class Page extends StatelessWidget {
             if (previousButtonText != null)
               ElevatedButton(
                 onPressed: () {
-                  onNext(controller.text);
+                  onBack!(controller.text);
                 },
                 child: Text(previousButtonText!),
               ),
