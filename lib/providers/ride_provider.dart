@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shotgun_v2/models/driver.dart';
@@ -7,6 +8,7 @@ import 'package:shotgun_v2/models/passenger.dart';
 
 class RideProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   List<Ride> _rides = [];
   Ride? _currentRide;
@@ -25,7 +27,12 @@ class RideProvider with ChangeNotifier {
   // Fetch all rides from Firestore
   Future<void> fetchRides() async {
     try {
-      QuerySnapshot snapshot = await _firestore.collection('rides').get();
+      final currentUid = _firebaseAuth.currentUser!.uid;
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .doc(currentUid)
+          .collection('rides')
+          .get();
       _rides = snapshot.docs.map((doc) => Ride.fromFirestore(doc)).toList();
       _errorMessage = null;
       notifyListeners();
@@ -41,8 +48,12 @@ class RideProvider with ChangeNotifier {
   // Create a new ride
   Future<void> createRide(Ride ride) async {
     try {
-      DocumentReference docRef =
-          await _firestore.collection('rides').add(ride.toMap());
+      final currentUid = _firebaseAuth.currentUser!.uid;
+      DocumentReference docRef = await _firestore
+          .collection('users')
+          .doc(currentUid)
+          .collection('rides')
+          .add(ride.toMap());
       ride.id = docRef.id;
       _rides.add(ride);
       _currentRide = ride;
@@ -57,13 +68,18 @@ class RideProvider with ChangeNotifier {
   // Join an existing ride
   Future<void> joinRide(String rideId, String userId, int seatNumber) async {
     try {
-      DocumentReference rideRef = _firestore.collection('rides').doc(rideId);
+      final currentUid = _firebaseAuth.currentUser!.uid;
+      DocumentReference rideRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('rides')
+          .doc(rideId);
       DocumentSnapshot rideSnapshot = await rideRef.get();
 
       if (rideSnapshot.exists) {
         await rideRef.set({
           'passengers': FieldValue.arrayUnion([
-            {userId, seatNumber}
+            {currentUid, seatNumber}
           ])
         }, SetOptions(merge: true));
         Ride ride = Ride.fromFirestore(rideSnapshot);
@@ -84,7 +100,12 @@ class RideProvider with ChangeNotifier {
   // Stream ride details by ID
   void streamRideDetails(String rideId) {
     try {
-      DocumentReference rideRef = _firestore.collection('rides').doc(rideId);
+      final currentUid = _firebaseAuth.currentUser!.uid;
+      DocumentReference rideRef = _firestore
+          .collection('users')
+          .doc(currentUid)
+          .collection('rides')
+          .doc(rideId);
       rideRef.snapshots().listen((rideSnapshot) {
         if (rideSnapshot.exists) {
           _currentRide =
@@ -105,7 +126,13 @@ class RideProvider with ChangeNotifier {
 
   void deleteRide(String? id) {
     try {
-      _firestore.collection('rides').doc(id).delete();
+      final currentUid = _firebaseAuth.currentUser!.uid;
+      _firestore
+          .collection('users')
+          .doc(currentUid)
+          .collection('rides')
+          .doc(id)
+          .delete();
       _rides.removeWhere((ride) => ride.id == id);
       _currentRide = null;
     } catch (e) {
@@ -129,8 +156,11 @@ class RideProvider with ChangeNotifier {
       }
       String userId = userSnapshot.docs.first.id;
 
-      DocumentReference rideRef =
-          _firestore.collection('rides').doc(_currentRide!.id);
+      DocumentReference rideRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('rides')
+          .doc(_currentRide!.id!);
       DocumentSnapshot rideSnapshot = await rideRef.get();
       if (rideSnapshot.exists) {
         await rideRef.update({

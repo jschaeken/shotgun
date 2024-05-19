@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
@@ -16,17 +17,16 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
   final _formKey = GlobalKey<FormState>();
   final destinationNode = FocusNode();
   late RideProvider rideProvider;
-  late AuthProvider authProvider;
+  late Auth authProvider;
   String _destination = '';
   DateTime? _dateTime;
   int _seatCounter = 4;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     rideProvider = Provider.of<RideProvider>(context, listen: false);
-    authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider = Provider.of<Auth>(context, listen: false);
     destinationNode.requestFocus();
   }
 
@@ -49,6 +49,8 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
                 onSaved: (value) {
                   _destination = value!;
                 },
+                //Capitalizes the first letter of the destination
+                textCapitalization: TextCapitalization.words,
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Please enter a destination';
@@ -58,11 +60,20 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
               ),
               const SizedBox(height: 20.0),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Seats Available:',
-                      style: TextStyle(fontSize: 16.0)),
-                  const Spacer(),
+                  const Flexible(
+                    child: Wrap(
+                      children: [
+                        Icon(CupertinoIcons.rectangle_3_offgrid_fill),
+                        SizedBox(width: 10.0),
+                        Text('Seats Available:',
+                            style: TextStyle(fontSize: 16.0)),
+                      ],
+                    ),
+                  ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       ButtonIncrementor(
                         icon: Icons.remove,
@@ -74,7 +85,9 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
                           });
                         },
                       ),
-                      Text('$_seatCounter'),
+                      SizedBox(
+                          width: 20.0,
+                          child: Center(child: Text('$_seatCounter'))),
                       ButtonIncrementor(
                         icon: Icons.add,
                         onPressed: () {
@@ -204,9 +217,8 @@ class ButtonIncrementor extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.0),
-          color: Colors.grey[300],
-        ),
+            borderRadius: BorderRadius.circular(10.0),
+            color: Theme.of(context).splashColor),
         child: IconButton(
           onPressed: onPressed,
           icon: Icon(icon),

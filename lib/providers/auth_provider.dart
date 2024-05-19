@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class AuthProvider with ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+class Auth with ChangeNotifier {
+  final FirebaseAuth _firebaseauth = FirebaseAuth.instance;
   User? _user;
 
   User? get user => _user;
@@ -15,15 +15,17 @@ class AuthProvider with ChangeNotifier {
 
   String? get errorMessage => _errorMessage;
 
-  AuthProvider() {
-    _auth.authStateChanges().listen(_onAuthStateChanged);
+  Auth() {
+    _firebaseauth.authStateChanges().listen(_onAuthStateChanged);
+    _firebaseauth.userChanges().listen(_onAuthStateChanged);
   }
 
   Future<void> signIn(String email, String password) async {
     try {
       _isLoading = true;
       notifyListeners();
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await _firebaseauth.signInWithEmailAndPassword(
+          email: email, password: password);
       _isLoading = false;
       notifyListeners();
     } on FirebaseAuthException catch (e) {
@@ -38,21 +40,26 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    await _firebaseauth.signOut();
   }
 
   void _onAuthStateChanged(User? user) {
+    if (user == _user) {
+      return;
+    }
     _user = user;
     _errorMessage = null;
     _isLoading = false;
     notifyListeners();
   }
 
-  void signUp(String s, String t, String u) async {
+  void signUp(String email, String password, String name) async {
     try {
       _isLoading = true;
       notifyListeners();
-      await _auth.createUserWithEmailAndPassword(email: s, password: t);
+      await _firebaseauth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      await _firebaseauth.currentUser!.updateDisplayName(name);
       _isLoading = false;
       notifyListeners();
     } on FirebaseAuthException catch (e) {
@@ -64,5 +71,10 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> editUserName(String name) async {
+    await _user!.updateDisplayName(name);
+    return;
   }
 }

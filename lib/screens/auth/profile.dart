@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shotgun_v2/providers/auth_provider.dart' as auth_provider;
+import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -11,12 +11,28 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final auth_provider.AuthProvider auth;
+  late final Auth auth;
+  bool editMode = false;
+  bool loading = false;
+  FocusNode? displayNameNode;
 
   @override
   void initState() {
     super.initState();
-    auth = Provider.of<auth_provider.AuthProvider>(context, listen: false);
+    auth = Provider.of<Auth>(context, listen: false);
+  }
+
+  toggleEditMode() {
+    setState(() {
+      editMode = !editMode;
+      if (editMode) {
+        displayNameNode = FocusNode();
+        displayNameNode!.requestFocus();
+      } else {
+        displayNameNode!.unfocus();
+        displayNameNode = null;
+      }
+    });
   }
 
   @override
@@ -24,8 +40,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        actions: [
+          IconButton(
+            icon: editMode ? const Icon(Icons.done) : const Icon(Icons.edit),
+            onPressed: () {
+              toggleEditMode();
+            },
+          ),
+        ],
       ),
-      body: Consumer<auth_provider.AuthProvider>(
+      body: Consumer<Auth>(
         builder: (context, auth, child) {
           if (auth.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -37,42 +61,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final user = auth.user!;
             return Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+              child: Stack(
                 children: [
-                  const SizedBox(
-                    width: double.infinity,
-                    height: 100,
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: double.infinity,
+                          height: 100,
+                        ),
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage: user.photoURL != null
+                              ? NetworkImage(user.photoURL!)
+                              : null,
+                          child: user.photoURL == null
+                              ? const Icon(Icons.person, size: 50)
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        editMode
+                            ? TextField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Display Name',
+                                ),
+                                focusNode: displayNameNode,
+                                controller: TextEditingController(
+                                    text: user.displayName),
+                                onSubmitted: (value) async {
+                                  toggleEditMode();
+                                  _setLoading(true);
+                                  await auth.editUserName(value);
+                                  _setLoading(false);
+                                },
+                              )
+                            : Text(
+                                user.displayName ?? 'No display name',
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall,
+                              ),
+                        const SizedBox(height: 8),
+                        Text(
+                          user.email ?? 'No email',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await auth.signOut();
+                            if (context.mounted) {
+                              _signOut(context);
+                            }
+                          },
+                          child: const Text('Sign Out'),
+                        ),
+                      ],
+                    ),
                   ),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: user.photoURL != null
-                        ? NetworkImage(user.photoURL!)
-                        : null,
-                    child: user.photoURL == null
-                        ? const Icon(Icons.person, size: 50)
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user.displayName ?? 'No display name',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    user.email ?? 'No email',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await auth.signOut();
-                      if (mounted) {
-                        _signOut(context);
-                      }
-                    },
-                    child: const Text('Sign Out'),
-                  ),
+                  if (loading)
+                    const Center(
+                      child: CircularProgressIndicator(),
+                    ),
                 ],
               ),
             );
@@ -80,6 +130,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       ),
     );
+  }
+
+  void _setLoading(bool value) {
+    setState(() {
+      loading = value;
+    });
   }
 
   _signOut(BuildContext context) async {

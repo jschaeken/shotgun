@@ -10,8 +10,8 @@ class AuthMainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to the AuthProvider
-    return Consumer<AuthProvider>(
+    // Listen to the Auth
+    return Consumer<Auth>(
       builder: (context, authProvider, _) {
         // If the user is not logged in, show the AuthPage
         if (authProvider.user == null) {

@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late final AuthProvider authProvider;
+  late final Auth authProvider;
   bool iHaveAccount = false;
   late final listener;
 
@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider = Provider.of<Auth>(context, listen: false);
     authProvider.addListener(() {
       if (mounted) {
         _onErrorMessage(authProvider.errorMessage);
