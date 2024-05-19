@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Auth with ChangeNotifier {
   final FirebaseAuth _firebaseauth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   User? _user;
 
   User? get user => _user;
@@ -39,27 +41,20 @@ class Auth with ChangeNotifier {
     }
   }
 
-  Future<void> signOut() async {
-    await _firebaseauth.signOut();
-  }
-
-  void _onAuthStateChanged(User? user) {
-    if (user == _user) {
-      return;
-    }
-    _user = user;
-    _errorMessage = null;
-    _isLoading = false;
-    notifyListeners();
-  }
-
   void signUp(String email, String password, String name) async {
     try {
       _isLoading = true;
       notifyListeners();
-      await _firebaseauth.createUserWithEmailAndPassword(
-          email: email, password: password);
-      await _firebaseauth.currentUser!.updateDisplayName(name);
+      await _firebaseauth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .then((value) async {
+        await _firebaseauth.currentUser!.updateDisplayName(name);
+        await _firestore.collection('users').doc(value.user!.uid).set({
+          'email': email,
+          'name': name,
+        });
+      });
+
       _isLoading = false;
       notifyListeners();
     } on FirebaseAuthException catch (e) {
@@ -71,6 +66,20 @@ class Auth with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> signOut() async {
+    await _firebaseauth.signOut();
+  }
+
+  void _onAuthStateChanged(User? user) async {
+    if (user == _user) {
+      return;
+    }
+    _user = user;
+    _errorMessage = null;
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> editUserName(String name) async {
