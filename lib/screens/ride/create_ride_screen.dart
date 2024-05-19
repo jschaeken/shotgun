@@ -14,6 +14,7 @@ class CreateRideScreen extends StatefulWidget {
 
 class _CreateRideScreenState extends State<CreateRideScreen> {
   final _formKey = GlobalKey<FormState>();
+  final destinationNode = FocusNode();
   late RideProvider rideProvider;
   late AuthProvider authProvider;
   String _destination = '';
@@ -26,6 +27,7 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
     super.initState();
     rideProvider = Provider.of<RideProvider>(context, listen: false);
     authProvider = Provider.of<AuthProvider>(context, listen: false);
+    destinationNode.requestFocus();
   }
 
   @override
@@ -42,6 +44,7 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
             children: [
               // Destination
               TextFormField(
+                focusNode: destinationNode,
                 decoration: const InputDecoration(labelText: 'Destination'),
                 onSaved: (value) {
                   _destination = value!;
@@ -111,38 +114,43 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
               const SizedBox(height: 20.0),
               // Seats Available Counter
               const SizedBox(height: 20.0),
-              ElevatedButton(
-                onPressed: () {
-                  final uid = authProvider.user?.uid;
-                  if (uid == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please login to create a ride'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    Ride newRide = Ride.upload(
-                      driverId: uid,
-                      destination: _destination,
-                      dateTime: _dateTime ?? DateTime.now(),
-                      availableSeats: _seatCounter,
-                      passengerMaps: [],
-                    );
-                    rideProvider.createRide(newRide).then((_) {
-                      Navigator.pop(context);
-                    });
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please fill in all fields'),
-                      ),
-                    );
-                  }
-                },
-                child: const Text('Create Ride'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      final uid = authProvider.user?.uid;
+                      if (uid == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please login to create a ride'),
+                          ),
+                        );
+                        return;
+                      }
+                      if (_formKey.currentState!.validate()) {
+                        _formKey.currentState!.save();
+                        Ride newRide = Ride.upload(
+                          driverId: uid,
+                          destination: _destination,
+                          dateTime: _dateTime ?? DateTime.now(),
+                          availableSeats: _seatCounter,
+                          passengerMaps: [],
+                        );
+                        rideProvider.createRide(newRide).then((_) {
+                          Navigator.pop(context);
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill in all fields'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Create Ride'),
+                  ),
+                ],
               ),
             ],
           ),

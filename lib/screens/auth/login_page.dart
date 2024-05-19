@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
 
@@ -69,40 +70,12 @@ class _LoginScreenState extends State<LoginScreen> {
           Row(
             children: [
               iHaveAccount
-                  ? TextButton(
-                      onPressed: () {
-                        setState(() {
-                          iHaveAccount = false;
-                        });
-                      },
-                      child: const Text('I have an account'),
-                    )
-                  : TextButton(
-                      onPressed: () {
-                        setState(() {
-                          iHaveAccount = true;
-                        });
-                      },
-                      child: const Text('Registering'),
-                    ),
+                  ? const Text('I have an account')
+                  : const Text('Registering'),
               Switch.adaptive(
-                  value: iHaveAccount,
-                  onChanged: (value) {
-                    setState(() {
-                      iHaveAccount = value;
-                      if (_currentPage == 0 && iHaveAccount) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeIn,
-                        );
-                      } else if (_currentPage == 1 && !iHaveAccount) {
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeIn,
-                        );
-                      }
-                    });
-                  }),
+                value: iHaveAccount,
+                onChanged: _toggleAccount,
+              ),
             ],
           )
         ],
@@ -146,6 +119,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           )),
     );
+  }
+
+  void _toggleAccount(bool value) {
+    setState(() {
+      iHaveAccount = value;
+      HapticFeedback.mediumImpact();
+      if (_currentPage == 0 && iHaveAccount) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      } else if (_currentPage == 1 && !iHaveAccount) {
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      }
+    });
   }
 
   void _onNext(String value) {

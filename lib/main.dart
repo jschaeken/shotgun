@@ -7,6 +7,7 @@ import 'package:shotgun_v2/models/driver.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
 import 'package:shotgun_v2/screens/auth/auth_main.dart';
+import 'package:shotgun_v2/screens/auth/profile.dart';
 import 'package:shotgun_v2/screens/ride/create_ride_screen.dart';
 import 'package:shotgun_v2/screens/ride/join_ride_screen.dart';
 import 'package:shotgun_v2/screens/ride/ride_details_screen.dart';
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
           '/': (context) => const AuthMainPage(),
           '/createRide': (context) => const CreateRideScreen(),
           '/joinRide': (context) => const JoinRideScreen(),
+          '/profile': (context) => const ProfileScreen(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/rideDetails') {
