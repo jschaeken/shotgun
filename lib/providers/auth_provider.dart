@@ -86,4 +86,9 @@ class Auth with ChangeNotifier {
     await _user!.updateDisplayName(name);
     return;
   }
+
+  Future<void> editUserPhotoUrl(String res) async {
+    await _user!.updatePhotoURL(res);
+    return;
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -5,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shotgun_v2/services/firestore_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,7 +18,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final Auth auth;
-  late final FirebaseFirestore _firestore;
+  late final FirestoreService firestoreService;
+
   bool editMode = false;
   bool loading = false;
   FocusNode? displayNameNode;
@@ -23,8 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _firestore = FirebaseFirestore.instance;
     auth = Provider.of<Auth>(context, listen: false);
+    firestoreService = FirestoreService();
   }
 
   toggleEditMode() {
@@ -150,7 +154,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // image picker
       final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image != null) {
-        // Process the selected image
+        log('Uploading profile image: ${image.path}');
+        final res = await firestoreService.uploadProfileImage(image);
+        if (res != null) {
+          log('Uploaded profile image: $res');
+          await auth.editUserPhotoUrl(res);
+        }
       }
     } catch (e) {
       print(e);
