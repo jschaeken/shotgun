@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Auth with ChangeNotifier {
   final FirebaseAuth _firebaseauth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   User? _user;
 
   User? get user => _user;
@@ -87,8 +92,29 @@ class Auth with ChangeNotifier {
     return;
   }
 
-  Future<void> editUserPhotoUrl(String res) async {
-    await _user!.updatePhotoURL(res);
-    return;
+  Future<void> editUserPhoto(XFile file) async {
+    try {
+      final ref = _storage.ref().child('users/').child(_user!.uid);
+      final uploadTask = ref.putFile(File(file.path));
+      final snapshot = uploadTask.snapshot;
+
+      final url = await snapshot.ref.getDownloadURL();
+      await _user!.updatePhotoURL(url);
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'imageUrl': url,
+      });
+    } on FirebaseException catch (e) {
+      _errorMessage = e.message;
+      _isLoading = false;
+      notifyListeners();
+      await Future.delayed(const Duration(seconds: 5));
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      await Future.delayed(const Duration(seconds: 5));
+      _errorMessage = null;
+    }
   }
 }

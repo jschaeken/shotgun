@@ -1,13 +1,11 @@
 import 'dart:developer';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shotgun_v2/services/firestore_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,7 +16,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final Auth auth;
-  late final FirestoreService firestoreService;
 
   bool editMode = false;
   bool loading = false;
@@ -28,7 +25,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     auth = Provider.of<Auth>(context, listen: false);
-    firestoreService = FirestoreService();
+    auth.addListener(() {
+      if (auth.errorMessage != null) {
+        _setLoading(false);
+        _onError(auth.errorMessage!);
+      }
+    });
   }
 
   toggleEditMode() {
@@ -62,8 +64,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         builder: (context, auth, child) {
           if (auth.isLoading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (auth.errorMessage != null) {
-            return Center(child: Text('Error: ${auth.errorMessage}'));
           } else if (auth.user == null) {
             return const Center(child: Text('No user found'));
           } else {
@@ -86,14 +86,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _startNewProfileImageFlow();
                             }
                           },
-                          child: CircleAvatar(
-                            radius: 50,
-                            backgroundImage: user.photoURL != null
-                                ? NetworkImage(user.photoURL!)
-                                : null,
-                            child: user.photoURL == null
-                                ? const Icon(Icons.person, size: 50)
-                                : null,
+                          child: Stack(
+                            children: [
+                              Hero(
+                                tag: 'profileImage',
+                                child: CircleAvatar(
+                                  radius: 50,
+                                  backgroundImage: user.photoURL != null
+                                      ? NetworkImage(user.photoURL!)
+                                      : null,
+                                  child: user.photoURL == null
+                                      ? const Icon(Icons.person, size: 50)
+                                      : null,
+                                ),
+                              ),
+                              if (editMode)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      CupertinoIcons.camera_rotate_fill,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -155,19 +178,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image != null) {
         log('Uploading profile image: ${image.path}');
-        final res = await firestoreService.uploadProfileImage(image);
-        if (res != null) {
-          log('Uploaded profile image: $res');
-          await auth.editUserPhotoUrl(res);
-        }
+        await auth.editUserPhoto(image);
       }
     } catch (e) {
-      print(e);
+      _onError(e.toString());
     }
     _setLoading(false);
   }
-
-  void _uploadProfileImage(XFile image) async {}
 
   void _setLoading(bool value) {
     setState(() {
@@ -178,5 +195,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   _signOut(BuildContext context) async {
     Navigator.pop(context);
     await auth.signOut();
+  }
+
+  _onError(String e) {
+    _showErrorSnackbar(context, e);
+  }
+
+  void _showErrorSnackbar(BuildContext context, String e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 }

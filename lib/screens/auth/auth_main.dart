@@ -4,6 +4,7 @@ import 'package:shotgun_v2/main.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:shotgun_v2/screens/auth/login_page.dart';
 import 'package:shotgun_v2/screens/home/home_screen.dart';
+import 'package:shotgun_v2/screens/main/main_screen.dart';
 
 class AuthMainPage extends StatelessWidget {
   const AuthMainPage({super.key});
@@ -18,7 +19,7 @@ class AuthMainPage extends StatelessWidget {
           return const LoginScreen();
         }
         // If the user is logged in, show the HomeScreen
-        return const HomeScreen();
+        return const MainScreen();
       },
     );
   }

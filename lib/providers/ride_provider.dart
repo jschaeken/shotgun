@@ -21,21 +21,28 @@ class RideProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   RideProvider() {
-    // Fetch rides on initialization
-    fetchRides();
+    streamRides();
   }
 
   // Fetch all rides from Firestore
-  Future<void> fetchRides() async {
+  Future<void> streamRides() async {
     try {
       final currentUid = _firebaseAuth.currentUser!.uid;
-      QuerySnapshot snapshot = await _firestore
+      _firestore
           .collection('users')
           .doc(currentUid)
           .collection('rides')
-          .get();
-      _rides = snapshot.docs.map((doc) => Ride.fromFirestore(doc)).toList();
-      _errorMessage = null;
+          .orderBy('dateTime', descending: true)
+          .snapshots()
+          .listen((snapshot) {
+        final res = snapshot.docs
+            .map((doc) => Ride.fromFirestore(doc))
+            .toList(growable: false);
+        log('res.length: ${res.length}');
+        _rides = res;
+        _errorMessage = null;
+        notifyListeners();
+      });
       notifyListeners();
     } catch (e, s) {
       if (kDebugMode) {
@@ -139,17 +146,15 @@ class RideProvider with ChangeNotifier {
     }
   }
 
-  void deleteRide(String? id) {
+  Future<void> deleteRide(String? id) async {
     try {
       final currentUid = _firebaseAuth.currentUser!.uid;
-      _firestore
+      await _firestore
           .collection('users')
           .doc(currentUid)
           .collection('rides')
           .doc(id)
           .delete();
-      _rides.removeWhere((ride) => ride.id == id);
-      _currentRide = null;
     } catch (e) {
       _errorMessage = e.toString();
     }
@@ -213,7 +218,7 @@ class Ride {
   String driverId;
   int availableSeats;
   Future<Driver?> driver;
-  String destination;
+  String rideName;
   DateTime dateTime;
   List<Map<String, dynamic>> passengerMaps;
   List<Future<Passenger?>> passengers;
@@ -224,7 +229,7 @@ class Ride {
     required this.driverId,
     this.availableSeats = 5,
     required this.driver,
-    required this.destination,
+    required this.rideName,
     required this.dateTime,
     required this.passengerMaps,
     this.passengers = const [],
@@ -234,7 +239,7 @@ class Ride {
 
   Ride.upload({
     required this.driverId,
-    required this.destination,
+    required this.rideName,
     required this.dateTime,
     required this.availableSeats,
     required this.passengerMaps,
@@ -245,7 +250,7 @@ class Ride {
       : driverId = '',
         availableSeats = 5,
         driver = Future.value(null),
-        destination = '',
+        rideName = '',
         dateTime = DateTime.now(),
         passengerMaps = [],
         passengers = [];
@@ -254,7 +259,7 @@ class Ride {
   Map<String, dynamic> toMap() {
     return {
       'driverId': driverId,
-      'destination': destination,
+      'rideName': rideName,
       'dateTime': dateTime.toIso8601String(),
       'passengerMaps': passengerMaps,
       'passengers': passengers,
@@ -286,7 +291,7 @@ class Ride {
       driverId: data['driverId'],
       driver: driver,
       availableSeats: data['availableSeats'] ?? 5,
-      destination: data['destination'],
+      rideName: data['rideName'],
       dateTime: DateTime.parse(data['dateTime']),
       passengerMaps: passengerMaps,
       passengers: passengers,

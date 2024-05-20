@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shotgun_v2/firebase_options.dart';
 import 'package:shotgun_v2/models/driver.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
+import 'package:shotgun_v2/providers/nav_provider.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
 import 'package:shotgun_v2/screens/auth/auth_main.dart';
 import 'package:shotgun_v2/screens/auth/profile.dart';
@@ -28,10 +29,18 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => Auth()),
         ChangeNotifierProvider(create: (_) => RideProvider()),
+        ChangeNotifierProvider(create: (_) => NavProvider()),
       ],
       child: MaterialApp(
         title: 'Shotgun',
-        theme: ThemeData(primarySwatch: Colors.amber),
+        theme: ThemeData(
+          primarySwatch: Colors.amber,
+          colorScheme: const ColorScheme.light(
+            primary: Color.fromARGB(255, 0, 0, 0),
+            secondary: Colors.black,
+            surface: Color.fromARGB(255, 235, 235, 235),
+          ),
+        ),
         initialRoute: '/',
         routes: {
           '/': (context) => const AuthMainPage(),

@@ -56,9 +56,9 @@ class RideDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Destination'),
+                  const Text('Ride Name'),
                   Text(
-                    ride.destination,
+                    ride.rideName,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const BodySpace(),

@@ -15,10 +15,10 @@ class CreateRideScreen extends StatefulWidget {
 
 class _CreateRideScreenState extends State<CreateRideScreen> {
   final _formKey = GlobalKey<FormState>();
-  final destinationNode = FocusNode();
+  final rideNameNode = FocusNode();
   late RideProvider rideProvider;
   late Auth authProvider;
-  String _destination = '';
+  String _rideName = '';
   DateTime? _dateTime;
   int _seatCounter = 4;
 
@@ -27,7 +27,7 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
     super.initState();
     rideProvider = Provider.of<RideProvider>(context, listen: false);
     authProvider = Provider.of<Auth>(context, listen: false);
-    destinationNode.requestFocus();
+    rideNameNode.requestFocus();
   }
 
   @override
@@ -42,18 +42,18 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Destination
+              // Ride Name
               TextFormField(
-                focusNode: destinationNode,
-                decoration: const InputDecoration(labelText: 'Destination'),
+                focusNode: rideNameNode,
+                decoration: const InputDecoration(labelText: 'Ride Name'),
                 onSaved: (value) {
-                  _destination = value!;
+                  _rideName = value!;
                 },
-                //Capitalizes the first letter of the destination
+                //Capitalizes the first letter of the ride name
                 textCapitalization: TextCapitalization.words,
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Please enter a destination';
+                    return 'Please enter a ride name';
                   }
                   return null;
                 },
@@ -145,7 +145,7 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
                         _formKey.currentState!.save();
                         Ride newRide = Ride.upload(
                           driverId: uid,
-                          destination: _destination,
+                          rideName: _rideName,
                           dateTime: _dateTime ?? DateTime.now(),
                           availableSeats: _seatCounter,
                           passengerMaps: [],
