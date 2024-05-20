@@ -1,12 +1,44 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
 
-class JoinRideScreen extends StatelessWidget {
+class JoinRideScreen extends StatefulWidget {
   const JoinRideScreen({super.key});
+
+  @override
+  State<JoinRideScreen> createState() => _JoinRideScreenState();
+}
+
+class _JoinRideScreenState extends State<JoinRideScreen> {
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  Barcode? result;
+
+  QRViewController? controller;
+
+  // In order to get hot reload to work we need to pause the camera if the platform
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller!.pauseCamera();
+    } else if (Platform.isIOS) {
+      controller!.resumeCamera();
+    }
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((scanData) {
+      setState(() {
+        result = scanData;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,32 +57,19 @@ class JoinRideScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () async {
-                // String qrCodeResult = await FlutterBarcodeScanner.scanBarcode(
-                //   '#ff6666',
-                //   'Cancel',
-                //   true,
-                //   ScanMode.QR,
-                // );
-
-                // if (qrCodeResult != '-1') {
-                //   rideProvider.joinRide(
-                //     qrCodeResult,
-                //     'currentUserId',
-                //     1,
-                //   );
-                // }
-              },
-              child: const Text('Scan QR Code'),
+            Flexible(
+              child: QRView(
+                key: qrKey,
+                onQRViewCreated: _onQRViewCreated,
+              ),
             ),
             const SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () async {
                 try {
                   await rideProvider.joinRide(
-                    '7S02Z8iUYhNNgoJpXdRq',
-                    'currentUserId',
+                    'Xvgva3rXY15OLWXdGrqQ',
+                    'dbgJ9pJgRDboJ3rFrWPpkkaI35J2',
                     1,
                   );
                 } catch (e) {

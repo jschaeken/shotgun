@@ -22,6 +22,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo Library Access To Upload Profile Images and Share Images on your ride!</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera Access To Scan QR Codes, Take Photos and Share Images on your ride!</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

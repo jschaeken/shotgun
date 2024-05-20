@@ -1,16 +1,20 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:shotgun_v2/models/driver.dart';
 import 'package:shotgun_v2/models/passenger.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
+import 'package:shotgun_v2/services/firestore_service.dart';
 import 'package:shotgun_v2/utils/dateTime.dart';
 
 class RideDetailsScreen extends StatelessWidget {
   final String rideId;
+  final FirestoreService firestoreService = FirestoreService();
 
-  const RideDetailsScreen({super.key, required this.rideId});
+  RideDetailsScreen({super.key, required this.rideId});
 
   @override
   Widget build(BuildContext context) {
@@ -170,30 +174,42 @@ class RideDetailsScreen extends StatelessWidget {
     );
   }
 
-  _showQRDialog(BuildContext context) {
+  _showQRDialog(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+    final qrFuture = firestoreService.getQrCode(rideId);
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('QR Code'),
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Scan this QR code to join the ride'),
-              SizedBox(height: 10),
-              // Image(
-              //   image: AssetImage('assets/images/qr_code.png'),
-              // ),
+              const Text('Scan this QR code to join the ride'),
+              const SizedBox(height: 20),
+              FutureBuilder<String?>(
+                future: qrFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError ||
+                      snapshot.data == null ||
+                      snapshot.data!.isEmpty) {
+                    return const Text('Error loading QR code');
+                  } else {
+                    return SvgPicture.network(
+                      height: 150,
+                      width: 150,
+                      snapshot.data!,
+                      placeholderBuilder: (context) {
+                        return const CircularProgressIndicator();
+                      },
+                    );
+                  }
+                },
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
         );
       },
     );

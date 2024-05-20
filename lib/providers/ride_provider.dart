@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -75,25 +76,38 @@ class RideProvider with ChangeNotifier {
           .collection('rides')
           .doc(rideId);
       DocumentSnapshot rideSnapshot = await rideRef.get();
-
-      if (rideSnapshot.exists) {
-        await rideRef.set({
-          'passengers': FieldValue.arrayUnion([
-            {currentUid, seatNumber}
-          ])
-        }, SetOptions(merge: true));
-        Ride ride = Ride.fromFirestore(rideSnapshot);
-        _currentRide = ride;
-        _errorMessage = null;
-      } else {
-        _errorMessage = 'Ride not found';
-      }
+      runZonedGuarded(() async {
+        if (rideSnapshot.exists && rideSnapshot.data() != null) {
+          final Map<String, dynamic> rideData =
+              rideSnapshot.data() as Map<String, dynamic>;
+          await rideRef.update(
+            {
+              'passengers': [
+                ...rideData['passengers'],
+                {
+                  'userId': currentUid,
+                  'seatNumber': seatNumber,
+                },
+              ],
+            },
+          );
+          Ride ride = Ride.fromFirestore(rideSnapshot);
+          _currentRide = ride;
+          _errorMessage = null;
+        } else {
+          _errorMessage = 'Ride not found';
+        }
+      }, (e, s) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: s);
+        _errorMessage = e.toString();
+      });
     } catch (e, s) {
       debugPrint(e.toString());
       debugPrintStack(stackTrace: s);
       _errorMessage = e.toString();
     }
-    notifyListeners();
+    // notifyListeners();
   }
 
   // Fetch ride details by ID
@@ -116,12 +130,13 @@ class RideProvider with ChangeNotifier {
           _errorMessage = 'Ride not found';
         }
       });
+      notifyListeners();
     } catch (e, s) {
       debugPrint(e.toString());
       debugPrintStack(stackTrace: s);
       _errorMessage = e.toString();
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void deleteRide(String? id) {
@@ -163,21 +178,32 @@ class RideProvider with ChangeNotifier {
           .doc(_currentRide!.id!);
       DocumentSnapshot rideSnapshot = await rideRef.get();
       if (rideSnapshot.exists) {
-        await rideRef.update({
-          'passengers': FieldValue.arrayUnion([
-            {userId, _currentRide!.seatsTaken + 1}
-          ])
-        });
-        Ride ride = Ride.fromFirestore(rideSnapshot);
-        _currentRide = ride;
+        final Map<String, dynamic> rideData =
+            rideSnapshot.data() as Map<String, dynamic>;
+        await rideRef.set(
+          {
+            'passengers': [
+              ...rideData['passengers'],
+              {
+                'userId': userId,
+                'seatNumber': _currentRide!.seatsTaken + 1,
+              },
+            ],
+          },
+          SetOptions(merge: true),
+        );
+        log('currentRide: ${_currentRide?.toMap()}');
         _errorMessage = null;
       } else {
         _errorMessage = 'Ride not found';
+
+        notifyListeners();
       }
     } catch (e) {
       _errorMessage = e.toString();
+
+      notifyListeners();
     }
-    notifyListeners();
   }
 }
 

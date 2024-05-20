@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +15,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final Auth auth;
+  late final FirebaseFirestore _firestore;
   bool editMode = false;
   bool loading = false;
   FocusNode? displayNameNode;
@@ -19,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _firestore = FirebaseFirestore.instance;
     auth = Provider.of<Auth>(context, listen: false);
   }
 
@@ -71,14 +76,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: double.infinity,
                           height: 100,
                         ),
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundImage: user.photoURL != null
-                              ? NetworkImage(user.photoURL!)
-                              : null,
-                          child: user.photoURL == null
-                              ? const Icon(Icons.person, size: 50)
-                              : null,
+                        GestureDetector(
+                          onTap: () async {
+                            if (editMode) {
+                              _startNewProfileImageFlow();
+                            }
+                          },
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundImage: user.photoURL != null
+                                ? NetworkImage(user.photoURL!)
+                                : null,
+                            child: user.photoURL == null
+                                ? const Icon(Icons.person, size: 50)
+                                : null,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         editMode
@@ -131,6 +143,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  void _startNewProfileImageFlow() async {
+    _setLoading(true);
+    try {
+      // image picker
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        // Process the selected image
+      }
+    } catch (e) {
+      print(e);
+    }
+    _setLoading(false);
+  }
+
+  void _uploadProfileImage(XFile image) async {}
 
   void _setLoading(bool value) {
     setState(() {

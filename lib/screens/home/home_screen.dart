@@ -114,7 +114,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   _showNewDialogue(BuildContext context) {
-    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.75),
