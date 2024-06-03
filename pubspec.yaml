@@ -49,6 +49,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   qr_code_scanner: ^1.0.1
   firebase_storage: ^11.7.5
+  live_activities: ^1.9.1+1
 
 dev_dependencies:
   flutter_test:

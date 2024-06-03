@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:shotgun_v2/firebase_options.dart';
 import 'package:shotgun_v2/models/driver.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
+import 'package:shotgun_v2/providers/friend_provider.dart';
 import 'package:shotgun_v2/providers/nav_provider.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
 import 'package:shotgun_v2/screens/auth/auth_main.dart';
 import 'package:shotgun_v2/screens/auth/profile.dart';
+import 'package:shotgun_v2/screens/friends/add_friend_screen.dart';
 import 'package:shotgun_v2/screens/ride/create_ride_screen.dart';
 import 'package:shotgun_v2/screens/ride/join_ride_screen.dart';
 import 'package:shotgun_v2/screens/ride/ride_details_screen.dart';
@@ -30,6 +32,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => Auth()),
         ChangeNotifierProvider(create: (_) => RideProvider()),
         ChangeNotifierProvider(create: (_) => NavProvider()),
+        ChangeNotifierProvider(create: (_) => FriendProvider()),
       ],
       child: MaterialApp(
         title: 'Shotgun',
@@ -47,6 +50,7 @@ class MyApp extends StatelessWidget {
           '/createRide': (context) => const CreateRideScreen(),
           '/joinRide': (context) => const JoinRideScreen(),
           '/profile': (context) => const ProfileScreen(),
+          '/addFriend': (context) => const AddFriendScreen(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/rideDetails') {

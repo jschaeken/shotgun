@@ -1,5 +1,5 @@
 abstract class Rider {
-  String? userId;
+  String userId;
   String? name;
   String? email;
   String? imageUrl;

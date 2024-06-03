@@ -2,44 +2,32 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:live_activities/live_activities.dart';
 import 'package:provider/provider.dart';
 import 'package:shotgun_v2/models/driver.dart';
 import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:shotgun_v2/providers/ride_provider.dart';
 import 'package:shotgun_v2/widgets/big_action_button.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final rideProvider = Provider.of<RideProvider>(context);
-    final auth = Provider.of<Auth>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: () {
-                _navToProfile(context);
-              },
-              child: auth.user?.photoURL != null
-                  ? Hero(
-                      tag: 'profileImage',
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(auth.user!.photoURL!),
-                      ),
-                    )
-                  : const Icon(Icons.account_circle, size: 35),
-            ),
-          ),
-        ],
-        title: const Text('My Rides',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        centerTitle: false,
-      ),
       body: rideProvider.rides.isEmpty
           ? Center(
               child: Column(
@@ -162,9 +150,5 @@ class HomeScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  void _navToProfile(BuildContext context) {
-    Navigator.pushNamed(context, '/profile');
   }
 }
