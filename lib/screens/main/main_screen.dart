@@ -4,6 +4,7 @@ import 'package:shotgun_v2/providers/auth_provider.dart';
 import 'package:shotgun_v2/providers/nav_provider.dart';
 import 'package:shotgun_v2/screens/friends/friends_screen.dart';
 import 'package:shotgun_v2/screens/home/home_screen.dart';
+import 'package:shotgun_v2/screens/music/music_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -11,6 +12,7 @@ class MainScreen extends StatelessWidget {
   final tabItemTitles = const [
     "My Rides",
     "Friends",
+    "Music",
   ];
 
   void _navToProfile(BuildContext context) {
@@ -57,6 +59,7 @@ class MainScreen extends StatelessWidget {
         children: const [
           HomeScreen(),
           FriendsScreen(),
+          MusicScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -73,6 +76,10 @@ class MainScreen extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'Friends',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.music_note),
+            label: 'Music',
           ),
         ],
       ),
